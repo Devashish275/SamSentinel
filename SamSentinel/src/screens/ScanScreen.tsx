@@ -1,4 +1,3 @@
-// ScanScreen.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -8,13 +7,14 @@ import {
   SafeAreaView,
   ScrollView,
   FlatList,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { COLORS } from '../constants/colors';
 import { MOCK_PRODUCTS, MOCK_OFFERS } from '../constants/mockData';
 import ProductCard from '../components/ProductCard';
 import MrWaltButton from '../components/MrWaltButton';
-import { launchCamera } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import type { Product, CartItem } from '../types';
 
@@ -31,57 +31,69 @@ const ScanScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   };
 
   const handleCameraPress = async () => {
-    const result = await launchCamera({ mediaType: 'photo', includeBase64: true });
+  const { status } = await ImagePicker.requestCameraPermissionsAsync();
+  if (status !== 'granted') {
+    Alert.alert('Permission Denied', 'Camera access is required to scan items.');
+    return;
+  }
 
-    if (result.didCancel || !result.assets || !result.assets[0]?.base64) return;
+  const result = await ImagePicker.launchCameraAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    quality: 1,
+    base64: true,
+  });
 
-    const image = result.assets[0];
+  if (result.canceled || !result.assets || !result.assets[0].base64) return;
 
-    try {
-      const response = await axios.post('http://192.168.43.63:5000/detect', {
-        image: image.base64,
+  const imageBase64 = result.assets[0].base64;
+
+  try {
+    const response = await axios.post('http://10.137.240.96:5000/detect', {
+      image: imageBase64,
+    });
+
+    const detectedNames = response.data.detected.map((d: string) => d.toLowerCase());
+
+    const matchedProducts: Product[] = MOCK_PRODUCTS.filter(product =>
+      detectedNames.includes(product.name.toLowerCase())
+    );
+
+    setCartItems(prevCart => {
+      const updatedCart = [...prevCart];
+
+      matchedProducts.forEach(product => {
+        const existingIndex = updatedCart.findIndex(
+          item => item.product.id === product.id
+        );
+
+        if (existingIndex !== -1) {
+          const existing = updatedCart[existingIndex];
+          const updatedQuantity = existing.quantity + 1;
+          const newTotal = +(product.price * updatedQuantity).toFixed(2);
+
+          updatedCart[existingIndex] = {
+            ...existing,
+            quantity: updatedQuantity,
+            total: newTotal,
+          };
+        } else {
+          updatedCart.push({
+            product,
+            quantity: 1,
+            total: +product.price.toFixed(2),
+          });
+        }
       });
 
-      const detectedNames = response.data.detected.map((d: string) => d.toLowerCase());
+      return updatedCart;
+    });
+  } catch (error) {
+    console.error('Detection error:', error);
+    Alert.alert("Sending to", "http://10.137.240.96:5000/detect");
+  }
+};
 
-const matchedProducts: Product[] = MOCK_PRODUCTS.filter(product =>
-  detectedNames.includes(product.name.toLowerCase())
-);
 
-
-      setCartItems(prevCart => {
-        const updatedCart = [...prevCart];
-
-        matchedProducts.forEach(product => {
-          const existingIndex = updatedCart.findIndex(
-            item => item.product.id === product.id
-          );
-
-          if (existingIndex !== -1) {
-            const existing = updatedCart[existingIndex];
-            const updatedQuantity = existing.quantity + 1;
-            const newTotal = +(product.price * updatedQuantity).toFixed(2);
-
-            updatedCart[existingIndex] = {
-              ...existing,
-              quantity: updatedQuantity,
-              total: newTotal,
-            };
-          } else {
-            updatedCart.push({
-              product,
-              quantity: 1,
-              total: +product.price.toFixed(2),
-            });
-          }
-        });
-
-        return updatedCart;
-      });
-    } catch (error) {
-      console.error('Detection error:', error);
-    }
-  };
 
   const renderOffer = ({ item }: { item: any }) => (
     <View style={styles.offerCard}>

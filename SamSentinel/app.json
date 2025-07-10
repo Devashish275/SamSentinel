@@ -1,4 +1,21 @@
 {
-  "name": "SamSentinel",
-  "displayName": "SamSentinel"
+  "expo": {
+    "name": "SamSentinel",
+    "slug": "SamSentinel",
+    "sdkVersion": "53.0.0",
+    "android": {
+      "package": "com.anonymous.samsentinel",
+      "permissions": [
+        "CAMERA"
+      ]
+    },
+    "extra": {
+      "eas": {
+        "projectId": "cd95a8ef-5bb8-481c-be8a-4deba7d362a9"
+      }
+    },
+    "plugins": [
+      "react-native-vision-camera"
+    ]
+  }
 }
