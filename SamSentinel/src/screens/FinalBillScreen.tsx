@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { COLORS } from '../constants/colors';
-import { MOCK_CART_ITEMS, MOCK_ML_WEIGHT_CHECK } from '../constants/mockData';
+import { MOCK_ML_WEIGHT_CHECK } from '../constants/mockData';
+import { useCart } from '../contexts/CartContext';
 import ProductCard from '../components/ProductCard';
 import MrWaltButton from '../components/MrWaltButton';
 
@@ -23,22 +24,25 @@ const FinalBillScreen: React.FC<FinalBillScreenProps> = ({ navigation }) => {
     alert('Proceeding to checkout...');
   };
 
+  const { cartItems } = useCart();
+
   const handleMrWaltPress = () => {
     navigation.navigate('MrWalt');
   };
 
   const calculateSubtotal = () => {
-    return MOCK_CART_ITEMS.reduce((sum, item) => sum + item.total, 0);
+    return cartItems.reduce((sum, item) => sum + item.total, 0);
   };
 
   const calculateTotalDiscount = () => {
-    return MOCK_CART_ITEMS.reduce((sum, item) => {
+    return cartItems.reduce((sum, item) => {
       if (item.product.originalPrice) {
         return sum + ((item.product.originalPrice - item.product.price) * item.quantity);
       }
       return sum;
     }, 0);
   };
+
 
   const subtotal = calculateSubtotal();
   const totalDiscount = calculateTotalDiscount();
@@ -82,7 +86,7 @@ const FinalBillScreen: React.FC<FinalBillScreenProps> = ({ navigation }) => {
         {/* Items List */}
         <View style={styles.itemsSection}>
           <Text style={styles.sectionTitle}>Your Items</Text>
-          {MOCK_CART_ITEMS.map((item) => (
+          {cartItems.map((item) => (
             <ProductCard key={item.product.id} item={item} />
           ))}
         </View>

@@ -13,6 +13,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { COLORS } from '../constants/colors';
 import { MOCK_PRODUCTS, MOCK_OFFERS } from '../constants/mockData';
 import ProductCard from '../components/ProductCard';
+import { useCart } from '../contexts/CartContext';
 import MrWaltButton from '../components/MrWaltButton';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
@@ -20,7 +21,7 @@ import type { Product, CartItem } from '../types';
 
 const ScanScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [showOffers, setShowOffers] = useState(false);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { cartItems, addToCart } = useCart();
 
   const handleDoneShopping = () => {
     navigation.navigate('FinalBill');
@@ -48,7 +49,7 @@ const ScanScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const imageBase64 = result.assets[0].base64;
 
   try {
-    const response = await axios.post('http://10.137.240.96:5000/detect', {
+    const response = await axios.post('http://192.168.129.96:5000/detect', {
       image: imageBase64,
     });
 
@@ -58,35 +59,12 @@ const ScanScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       detectedNames.includes(product.name.toLowerCase())
     );
 
-    setCartItems(prevCart => {
-      const updatedCart = [...prevCart];
+    matchedProducts.forEach(product => {
+  addToCart(product);
+});
 
-      matchedProducts.forEach(product => {
-        const existingIndex = updatedCart.findIndex(
-          item => item.product.id === product.id
-        );
 
-        if (existingIndex !== -1) {
-          const existing = updatedCart[existingIndex];
-          const updatedQuantity = existing.quantity + 1;
-          const newTotal = +(product.price * updatedQuantity).toFixed(2);
 
-          updatedCart[existingIndex] = {
-            ...existing,
-            quantity: updatedQuantity,
-            total: newTotal,
-          };
-        } else {
-          updatedCart.push({
-            product,
-            quantity: 1,
-            total: +product.price.toFixed(2),
-          });
-        }
-      });
-
-      return updatedCart;
-    });
   } catch (error) {
     console.error('Detection error:', error);
     Alert.alert("Sending to", "http://10.137.240.96:5000/detect");

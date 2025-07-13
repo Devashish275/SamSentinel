@@ -131,8 +131,9 @@ export const MOCK_AI_CONVERSATION: AIMessage[] = [
 ];
 
 export const MOCK_ML_WEIGHT_CHECK = {
-  status: 'success' as const,
-  message: 'Weight check passed! All items match expected weight.',
-  weight: 2.45,
-  expectedWeight: 2.43,
+  status: 'success', // or 'error'
+  message: 'Weight matches expected value.',
+  weight: 5.2,
+  expectedWeight: 5.2,
 };
+

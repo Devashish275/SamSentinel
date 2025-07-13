@@ -1,10 +1,20 @@
+// src/types.ts
+
+export type RootStackParamList = {
+  Home: undefined;
+  Scan: undefined;
+  FinalBill: undefined;
+  MrWalt: undefined;
+};
+
+// Optional: Add Product, CartItem, Offer, AIMessage, etc., here for centralized typing
+
 export interface Product {
   id: string;
   name: string;
   price: number;
   originalPrice?: number;
   discount?: number;
-  image?: string;
   category: string;
 }
 
@@ -19,7 +29,7 @@ export interface Offer {
   title: string;
   description: string;
   discount: number;
-  expiryTime?: string;
+  expiryTime: string;
   isActive: boolean;
 }
 
@@ -29,17 +39,3 @@ export interface AIMessage {
   isUser: boolean;
   timestamp: Date;
 }
-
-export interface MLWeightCheck {
-  status: 'success' | 'error';
-  message: string;
-  weight: number;
-  expectedWeight: number;
-}
-
-export type RootStackParamList = {
-  Home: undefined;
-  Scan: undefined;
-  FinalBill: undefined;
-  MrWalt: undefined;
-}; 
